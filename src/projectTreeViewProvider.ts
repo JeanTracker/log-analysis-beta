@@ -39,7 +39,7 @@ export class ProjectItem extends vscode.TreeItem {
     super(project.name, vscode.TreeItemCollapsibleState.None);
     this.id = project.id;
     this.command = {
-      command: 'log-analysis.selectProject',
+      command: 'log-analysis-beta.selectProject',
       title: 'Select Project',
       arguments: [this]
     } as vscode.Command;
