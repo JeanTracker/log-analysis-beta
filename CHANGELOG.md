@@ -2,6 +2,10 @@
 
 All notable changes to the "log-analysis-beta" extension will be documented in this file.
 
+## 1.2.12
+
+- Fixed a bug where the exclusive filter was not being deleted.
+
 ## 1.2.11
 
 - Improved UX for the project feature and updated the README

@@ -126,21 +126,22 @@ export function turnOnFocusMode(state: State) {
 }
 
 export function deleteFilter(treeItem: vscode.TreeItem, state: State) {
-  const parentItem = state.filterTreeViewProvider.getParentItem(treeItem);
-
   const deleteIndex = state.exFilters.findIndex(filter => (filter.id === treeItem.id));
   if (deleteIndex !== -1) {
+    // delete ex filter
     state.exFilters.splice(deleteIndex, 1);
+    refreshEditors(state);
+  } else {
+    // delete filter
+    const parentItem = state.filterTreeViewProvider.getParentItem(treeItem);
+    state.groups.map(group => {
+      const deleteIndex = group.filters.findIndex(filter => (filter.id === treeItem.id));
+      if (deleteIndex !== -1) {
+        group.filters.splice(deleteIndex, 1);
+      }
+    });
+    refreshEditors(state, parentItem);
   }
-
-  state.groups.map(group => {
-    const deleteIndex = group.filters.findIndex(filter => (filter.id === treeItem.id));
-    if (deleteIndex !== -1) {
-      group.filters.splice(deleteIndex, 1);
-    }
-  });
-
-  refreshEditors(state, parentItem);
 }
 
 export function addFilter(treeItem: vscode.TreeItem, state: State) {
