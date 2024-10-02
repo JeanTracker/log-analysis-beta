@@ -2,6 +2,10 @@
 
 All notable changes to the "log-analysis-beta" extension will be documented in this file.
 
+## 1.2.13
+
+- Modified the behavior to display the previous label when renaming Filters, Groups, or Projects.
+
 ## 1.2.12
 
 - Fixed a bug where the exclusive filter was not being deleted.

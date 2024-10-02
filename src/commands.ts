@@ -178,6 +178,7 @@ export function editFilter(treeItem: vscode.TreeItem, state: State) {
     .showInputBox({
       prompt: "[FILTER] Type a new regex",
       ignoreFocusOut: false,
+      value: treeItem.label ? treeItem.label.toString().replace(/^\/|\/$/g, '') : ""
     })
     .then((regexStr) => {
       if (regexStr === undefined) {
@@ -292,7 +293,8 @@ export function addGroup(state: State) {
 export function editGroup(treeItem: vscode.TreeItem, state: State) {
   vscode.window.showInputBox({
     prompt: "[GROUP] Type a new group name",
-    ignoreFocusOut: false
+    ignoreFocusOut: false,
+    value: treeItem.label ? treeItem.label.toString() : ""
   }).then(name => {
     if (name === undefined) {
       return;
@@ -357,6 +359,7 @@ export function editProject(treeItem: vscode.TreeItem, state: State, callback: (
     .showInputBox({
       prompt: "[PROJECT] Type a new name",
       ignoreFocusOut: false,
+      value: treeItem.label ? treeItem.label.toString() : ""
     })
     .then((name) => {
       if (name === undefined) {
