@@ -2,6 +2,11 @@
 
 All notable changes to the "log-analysis-beta" extension will be documented in this file.
 
+## 1.2.14
+
+- Fixed issue [#3](https://github.com/JeanTracker/log-analysis-beta/issues/3) with deleting the last project in the "Log Analysis Beta" menu.
+- Added confirmation prompt and prevented errors when no project is selected.
+
 ## 1.2.13
 
 - Modified the behavior to display the previous label when renaming Filters, Groups, or Projects.

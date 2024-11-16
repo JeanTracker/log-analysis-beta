@@ -376,6 +376,28 @@ export function editProject(treeItem: vscode.TreeItem, state: State, callback: (
     });
 }
 
+export async function handleLastProjectDeletion(treeItem: vscode.TreeItem, state: State) {
+  if (state.projects.length !== 1) {
+    deleteProject(treeItem, state);
+    return;
+  }
+
+  const userResponse = await vscode.window.showWarningMessage(
+    'This is the last item. Are you sure you want to delete it? If you delete it, an initialized NONAME project will be created.',
+    { modal: true },
+    'Yes',
+    'No'
+);
+
+  if (userResponse === 'Yes') {
+      vscode.window.showInformationMessage('Item deleted successfully.');
+      deleteProject(treeItem, state);
+      refreshSettings(state);
+    } else if (userResponse === 'No') {
+      vscode.window.showInformationMessage('Item deletion canceled.');
+  }
+}
+
 export function deleteProject(treeItem: vscode.TreeItem, state: State) {
   const selectedIndex = getProjectSelectedIndex(state.projects);
   const deleteIndex = state.projects.findIndex(project => (project.id === treeItem.id));
