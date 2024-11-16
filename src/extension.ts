@@ -14,7 +14,7 @@ import {
   saveProject,
   addProject,
   editProject,
-  deleteProject,
+  handleLastProjectDeletion,
   refreshSettings,
   selectProject,
   updateExplorerTitle,
@@ -143,8 +143,13 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage('This command is excuted with button in Log Analysis Beta Projects');
         return;
       }
-      deleteProject(treeItem, state);
-      updateExplorerTitle(view, state);
+      handleLastProjectDeletion(treeItem, state)
+      .then(() => {
+        updateExplorerTitle(view, state);
+      })
+      .catch((err) => {
+          vscode.window.showErrorMessage(`Error: ${err.message}`);
+      });
     });
   context.subscriptions.push(disposableDeleteProject);
 
