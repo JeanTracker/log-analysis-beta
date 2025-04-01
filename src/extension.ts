@@ -69,6 +69,85 @@ export function activate(context: vscode.ExtensionContext) {
     state.focusProvider
   );
   context.subscriptions.push(disposableFocus);
+
+  // Command: On clicking a link in the virtual document, navigate to the corresponding line in the original file.
+  const openOriginalLocation = vscode.commands.registerCommand(
+    'log-analysis-beta.openOriginalLocation',
+    (virtualLineIndex: number) => {
+      const activeEditor = vscode.window.activeTextEditor;
+      if (!activeEditor) {
+        vscode.window.showErrorMessage('No active editor.');
+        return;
+      }
+      if (virtualLineIndex === undefined) {
+        vscode.window.showErrorMessage('Invalid virtual line index provided.');
+        return;
+      }
+      // Ensure we're operating from a virtual (focus mode) document.
+      const virtualUri = activeEditor.document.uri;
+      if (!virtualUri.toString().startsWith("focus-beta:")) {
+        vscode.window.showInformationMessage("The current document is not in focus mode.");
+        return;
+      }
+      // Recover the original file's URI by removing the "focus-beta:" prefix.
+      const originalUri = vscode.Uri.parse(virtualUri.path.replace(/^focus-beta:/, ''));
+      const documentLineMap = state.focusProvider.documentLineMap.get(originalUri.fsPath);
+      if (!documentLineMap || virtualLineIndex < 0 || virtualLineIndex >= documentLineMap.length) {
+        vscode.window.showErrorMessage('Invalid index.');
+        return;
+      }
+      const originalLine = documentLineMap[virtualLineIndex];
+
+      // Check if the original file is already open (in any tab, including preview mode).
+      let openEditor = vscode.window.visibleTextEditors.find(
+        editor => editor.document.uri.fsPath === originalUri.fsPath
+      );
+
+      if (openEditor) {
+        // Scenario 1, 2, or 3: Original file is open (preview, same tab, or different tab).
+        // Focus the existing editor and navigate to the specified line.
+        const pos = new vscode.Position(originalLine, 0);
+        openEditor.selection = new vscode.Selection(pos, pos);
+        openEditor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+        vscode.window.showTextDocument(openEditor.document, openEditor.viewColumn);
+      } else {
+        // Scenario 4: Original file is not open.
+        // Open the original file in a new editor tab (non-preview) without affecting the virtual document.
+        vscode.workspace.openTextDocument(originalUri)
+          .then(doc => vscode.window.showTextDocument(doc, { preview: false }))
+          .then(editor => {
+            const pos = new vscode.Position(originalLine, 0);
+            editor.selection = new vscode.Selection(pos, pos);
+            editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+          });
+      }
+    }
+  );
+  context.subscriptions.push(openOriginalLocation);
+
+  // DocumentLinkProvider: Add a link to each line (starting at line 1) that executes the openOriginalLocation command.
+  const linkProvider = vscode.languages.registerDocumentLinkProvider(
+    { scheme: 'focus-beta' },
+    {
+      provideDocumentLinks(document: vscode.TextDocument) {
+        const links: vscode.DocumentLink[] = [];
+        const lines = document.getText().split('\n');
+        for (let i = 1; i < lines.length; i++) {
+          const lineText = lines[i];
+          const linkRange = new vscode.Range(i, 0, i, lineText.length);
+          console.log(`[${i}]: ${lineText}, ${linkRange}`);
+          // Pass the line index as an argument to the command.
+          const commandUri = vscode.Uri.parse(
+            `command:log-analysis-beta.openOriginalLocation?${encodeURIComponent(JSON.stringify([i]))}`
+          );
+          links.push(new vscode.DocumentLink(linkRange, commandUri));
+        }
+        return links;
+      }
+    }
+  );
+  context.subscriptions.push(linkProvider);
+
   //register filterTreeViewProvider under id 'filters' which gets attached
   //to the file explorer according to package.json's contributes>views>explorer
   const view = vscode.window.createTreeView(
@@ -100,6 +179,17 @@ export function activate(context: vscode.ExtensionContext) {
       refreshEditors(state);
     });
   context.subscriptions.push(disposableOnDidChangeVisibleTextEditors);
+
+  var disposableOnDidCloseTextDocument = vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
+    console.log(`[${new Date().toISOString()}] disposableOnDidCloseTextDocument - ${document.uri.scheme}`);
+    if (document.uri.scheme !== "focus-beta") {
+      return;
+    }
+    const originalUri = vscode.Uri.parse(document.uri.path.replace(/^focus-beta:/, ''));
+    const deleted = state.focusProvider.documentLineMap.delete(originalUri.fsPath);
+    console.log(`Removed entry for ${originalUri.fsPath}: ${deleted}`);
+  });
+  context.subscriptions.push(disposableOnDidCloseTextDocument);
 
   var disposableOnDidChangeTextDocument =
     vscode.workspace.onDidChangeTextDocument((event) => {
@@ -144,12 +234,12 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       handleLastProjectDeletion(treeItem, state)
-      .then(() => {
-        updateExplorerTitle(view, state);
-      })
-      .catch((err) => {
+        .then(() => {
+          updateExplorerTitle(view, state);
+        })
+        .catch((err) => {
           vscode.window.showErrorMessage(`Error: ${err.message}`);
-      });
+        });
     });
   context.subscriptions.push(disposableDeleteProject);
 

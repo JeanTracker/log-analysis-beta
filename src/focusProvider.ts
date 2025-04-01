@@ -9,6 +9,13 @@ export class FocusProvider implements vscode.TextDocumentContentProvider {
   constructor(private groups: Group[], private exFilters: Filter[]) {
   }
 
+  /**
+   * documentLineMap stores an array of line numbers for each original file's path (fsPath).
+   * The key is the fsPath of the original file, and the value is an array of line numbers
+   * that match the filtering criteria.
+   */
+  public documentLineMap: Map<string, number[]> = new Map();
+
   //open the original document specified by the uri and return the focused version of its text
   async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
     let originalUri = vscode.Uri.parse(uri.path);
@@ -16,6 +23,7 @@ export class FocusProvider implements vscode.TextDocumentContentProvider {
 
     // start the string with an empty line to make room for the focus mode text decoration
     let resultArr: string[] = [""];
+    let resultLineArr: number[] = [0];
 
     this.exFilters.forEach(exFilter => {
       exFilter.count = 0;
@@ -42,11 +50,15 @@ export class FocusProvider implements vscode.TextDocumentContentProvider {
             });
             if (!isExcluded) {
               resultArr.push(line);
+              resultLineArr.push(lineIdx);
             }
             break;
           }
         }
       }
+    }
+    if (resultLineArr.length) {
+      this.documentLineMap.set(originalUri.fsPath, resultLineArr);
     }
     return resultArr.join("\n");
   }

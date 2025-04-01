@@ -18,6 +18,7 @@ We encourage you to freely share any issues or suggestions for improvement you e
 - Exclude meaningless filters from the filtered content in Focus mode for more accurate log analysis
 - Organize filters into groups based on their purpose and apply changes to the entire group collectively
 - Manage filters on a per-project basis to accommodate different log formats across various devices and frameworks
+- Click a filtered line in focus mode to jump directly to its corresponding location in the original document
 
 ## Usage
 
@@ -98,6 +99,12 @@ In this tab, you can add exclusion filters to remove unnecessary information fro
 #### Focus Mode
 
 You can use `log-analysis-beta.turnOnFocusMode` command to activate focus mode for the active editor. The command has a default shortcut: `ctrl/cmd + h`, or the second icon located on the top of the tab can achieve the same goal. And as the focus mode is just another tab, you can close focus mode as how you close any vscode tab.
+
+#### Clickable Filtered Result Navigation
+
+In Focus Mode, filtered log lines are now displayed in a read-only virtual document with clickable links. When you click a filtered line, the extension automatically retrieves the original file’s URI and the corresponding line number from an internal mapping. If the original file is already open, the extension focuses on that editor and scrolls directly to the target line; if not, it opens the original file in a new editor at the specified location. This feature streamlines your log analysis by allowing quick navigation between the focused view and the complete log context.
+
+![navigation](./image/navigation.png)
 
 ### Advanced Users
 
